@@ -18,29 +18,35 @@ function FeedbackForm({ onSuccess }) {
     event.preventDefault();
     setSubmitting(true);
     setError('');
+    try {
+      const { data, error: insertError } = await supabase.from('beta_feedback').insert([
+        {
+          name: name || null,
+          email: email || null,
+          star_rating: starRating,
+          device,
+          has_bug: hasBug === 'Yes',
+          bug_description: hasBug === 'Yes' ? bugDescription : null,
+          liked_most: likedMost || null,
+          improvements: improvements || null,
+          other_comments: otherComments || null
+        }
+      ]);
 
-    const { error: insertError } = await supabase.from('beta_feedback').insert([
-      {
-        name: name || null,
-        email: email || null,
-        star_rating: starRating,
-        device,
-        has_bug: hasBug === 'Yes',
-        bug_description: hasBug === 'Yes' ? bugDescription : null,
-        liked_most: likedMost || null,
-        improvements: improvements || null,
-        other_comments: otherComments || null
+      setSubmitting(false);
+
+      if (insertError) {
+        console.error('Supabase insert error:', insertError);
+        setError(`Something went wrong. Please try again. (${insertError.message})`);
+        return;
       }
-    ]);
 
-    setSubmitting(false);
-
-    if (insertError) {
+      onSuccess();
+    } catch (err) {
+      setSubmitting(false);
+      console.error('Unexpected error during submission:', err);
       setError('Something went wrong. Please try again.');
-      return;
     }
-
-    onSuccess();
   };
 
   return (
